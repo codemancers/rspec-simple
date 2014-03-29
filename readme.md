@@ -21,5 +21,4 @@ If your shell is not being picked correctly you can as well try:
     (setq shell-file-name "zsh")
     (setq shell-command-switch "-c")
 
-
-
+![Rspec simple](https://github.com/code-mancers/rspec-simple/raw/master/images/rspec-simple.gif "rspec simple")
