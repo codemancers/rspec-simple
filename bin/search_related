@@ -1,0 +1,127 @@
+#!/usr/bin/env ruby --disable=gems
+
+class SearchRelated
+  attr_accessor :root_directory, :current_file, :partial_filename
+  attr_accessor :file_extension
+
+  DEFAULT_GIT_LS = "git ls-files --exclude-standard"
+
+  RAILS_FILE_PATTERNS = [
+    [/app\/models\/([^.]+)\.rb/, ["spec/models/\\1_spec.rb", "spec/models"]],
+    [/spec\/models\/([^.]+)_spec\.rb/, ["app/models/\\1.rb", "app/models"]],
+    [/app\/controllers\/([^.]+)\.rb/, ["spec/controllers/\\1_spec.rb", "spec/controllers"]],
+    [/spec\/controllers\/([^.]+)_spec\.rb/, ["app/controllers/\\1.rb", "app/controllers"]],
+    [/lib\/([^.]+)\.rb/, ["spec/lib/\\1_spec.rb", "spec/lib"]],
+    [/spec\/lib\/([^.]+)_spec\.rb/, ["lib/\\1.rb", "lib"]]
+  ]
+
+  def initialize(root_directory, current_file)
+    @root_directory = root_directory
+    @current_file = current_file
+    @file_extension = File.extname(current_file)
+    @partial_filename = File.basename(current_file, File.extname(current_file))
+  end
+
+  def search
+    if rails?
+      find_related_file_with_rails_convensions
+    else
+      find_regular_file
+    end
+  end
+
+  def find_opposite_directory
+    directory = File.dirname(current_file)
+    if current_file =~ /_spec/
+      directory.gsub!(/spec/, 'app')
+    else
+      directory.gsub!(/app/, 'spec')
+    end
+    recursive_directory_match(directory)
+  end
+
+  def find_opposite_file
+    directory = File.dirname(current_file)
+    if current_file =~ /_spec/
+      directory.gsub(/spec/, 'lib')
+    else
+      directory.gsub(/lib/, 'spec')
+    end
+  end
+
+  private
+
+  def recursive_directory_match(directory)
+    if Dir.exist?(directory) || directory == root_directory
+      directory
+    else
+      recursive_directory_match(directory.split("/")[0..-2].join("/"))
+    end
+  end
+
+  def find_regular_file
+    found_match = []
+    file_list = run_git_ls(find_opposite_file)
+    found_match += file_list.select do |file|
+      matching_filename = potential_match
+      file.match(/#{matching_filename}$/) && file
+    end
+
+    if found_match.empty?
+      file_list
+    else
+      found_match
+    end
+  end
+
+  def spec_file?
+    partial_filename =~ /_spec/
+  end
+
+  def potential_match
+    if spec_file?
+      partial_filename.gsub(/_spec/, file_extension)
+    else
+      "#{partial_filename}_spec#{file_extension}"
+    end
+  end
+
+  def find_related_file_with_rails_convensions
+    found_match = []
+    RAILS_FILE_PATTERNS.each do |pattern, matches|
+      if current_file =~ pattern
+        if possible_file = try_exact_match(pattern, matches[0])
+          found_match = [possible_file]
+          break
+        elsif opposite_directory = find_opposite_directory
+          found_match += run_git_ls(opposite_directory)
+        else
+          found_match += run_git_ls(root_directory)
+        end
+      end
+    end
+    found_match
+  end
+
+  def try_exact_match(pattern, match)
+    possible_file = current_file.gsub(pattern, match)
+    return nil unless File.exist?(possible_file)
+    possible_file
+  end
+
+  def run_git_ls(directory)
+    complete_command = "#{DEFAULT_GIT_LS} #{directory}"
+    command_output = `#{complete_command}`
+    command_output.split("\n")
+  end
+
+  def rails?
+    File.exist?(File.join(root_directory, "config/environment.rb")) &&
+      Dir.exist?(File.join(root_directory, "config/environments"))
+  end
+end
+
+if __FILE__ == $0
+  t = SearchRelated.new(Dir.pwd, ARGV.first)
+  puts t.search
+end
