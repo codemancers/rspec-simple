@@ -13,20 +13,24 @@ of FILE in the current directory, suitable for creation"
      if (equal d root)
      return nil)))
 
+(defvar rspec-simple-source-dir        nil "Private variable.")
+
 (defun rspec-compile-file ()
   (interactive)
-  (compile (format "cd %s;bundle exec rspec %s"
+  (compile (format "cd %s;bundle exec rspec --format d %s"
                    (get-closest-gemfile-root)
                    (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
                    ) t))
 
 (defun rspec-compile-on-line ()
   (interactive)
-  (compile (format "cd %s;bundle exec rspec %s -l %s"
-                   (get-closest-gemfile-root)
-                   (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
-                   (line-number-at-pos)
-                   ) t))
+  (progn
+    (window-configuration-to-register 9)
+    (compile (format "cd %s;bundle exec rspec %s -l %s"
+                     (get-closest-gemfile-root)
+                     (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
+                     (line-number-at-pos)
+                     ) t)))
 
 (defun zeus-rspec-compile-file ()
   (interactive)
@@ -55,10 +59,19 @@ of FILE in the current directory, suitable for creation"
   (let* (
          (current-file-name (buffer-file-name))
          (app-root (get-closest-gemfile-root))
-         (file-list (rspec-simple-shell-command (concat "search_related " current-file-name) "\n" app-root))
+         (file-list (rspec-simple-shell-command
+                     (concat
+                      (concat (rspec-simple-source-dir) "bin/search_related ")
+                      current-file-name) "\n" app-root)
+                    )
          )
     (rspec-simple-ido-find-file file-list)
     ))
+
+(defun rspec-simple-source-dir ()
+  (or rspec-simple-source-dir
+      (setq rspec-simple-source-dir (file-name-directory (find-lisp-object-file-name
+                                                          'rspec-simple-source-dir (symbol-function 'rspec-simple-source-dir))))))
 
 (defun rspec-simple-ido-find-file (file-list)
   "Actually find file to open, using ido."
@@ -82,6 +95,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
+            (local-set-key (kbd "s-t") 'find-related-file)
             ))
 
 (add-hook 'ruby-mode-hook
@@ -89,6 +103,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
+            (local-set-key (kbd "s-t") 'find-related-file)
             ))
 
 (provide 'rspec-simple)
