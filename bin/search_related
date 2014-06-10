@@ -11,8 +11,10 @@ class SearchRelated
     [/spec\/models\/([^.]+)_spec\.rb/, ["app/models/\\1.rb", "app/models"]],
     [/app\/controllers\/([^.]+)\.rb/, ["spec/controllers/\\1_spec.rb", "spec/controllers"]],
     [/spec\/controllers\/([^.]+)_spec\.rb/, ["app/controllers/\\1.rb", "app/controllers"]],
+    [/app\/([^.]+)\.rb/, ["spec/\\1_spec.rb", "spec"]],
     [/lib\/([^.]+)\.rb/, ["spec/lib/\\1_spec.rb", "spec/lib"]],
-    [/spec\/lib\/([^.]+)_spec\.rb/, ["lib/\\1.rb", "lib"]]
+    [/spec\/lib\/([^.]+)_spec\.rb/, ["lib/\\1.rb", "lib"]],
+    [/spec\/([^.]+)_spec\.rb/, ["app/\\1.rb", "app"]]
   ]
 
   def initialize(root_directory, current_file)
@@ -43,10 +45,11 @@ class SearchRelated
   def find_opposite_file
     directory = File.dirname(current_file)
     if current_file =~ /_spec/
-      directory.gsub(/spec/, 'lib')
+      x = directory.gsub(/spec/, 'lib')
     else
-      directory.gsub(/lib/, 'spec')
+      x = directory.gsub(/lib/, 'spec')
     end
+    x
   end
 
   private
@@ -62,9 +65,12 @@ class SearchRelated
   def find_regular_file
     found_match = []
     file_list = run_git_ls(find_opposite_file)
-    found_match += file_list.select do |file|
+
+    file_list.select do |file|
       matching_filename = potential_match
-      file.match(/#{matching_filename}$/) && file
+      if matching_filename && file.match(/#{matching_filename}$/)
+        found_match << File.expand_path(file, root_directory)
+      end
     end
 
     if found_match.empty?
