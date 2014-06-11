@@ -1,6 +1,20 @@
 (require 'cl)
 (require 'compile)
 
+(defface rspec-button-face
+  '((((class color)) (:foreground "blue" :bold t))
+    (t (:reverse-video t)))
+  "Face to use for highlighting links in rspec files."
+  :group 'faces
+  :group 'button)
+
+(define-button-type 'rspec-ref-button
+  'help-echo "Push to create an empty reference definition"
+  'face 'rspec-button-face
+  'action (lambda (b)
+            (call-interactively 'find-file)))
+
+
 (defun* get-closest-gemfile-root (&optional (file "Gemfile"))
   "Determine the pathname of the first instance of FILE starting from the current directory towards root.
 This may not do the correct thing in presence of links. If it does not find FILE, then it shall return the name
@@ -52,6 +66,14 @@ of FILE in the current directory, suitable for creation"
       (mapcar (lambda (file)
                 (cons file (expand-file-name file working-dir)))
               files))))
+
+(defun rspec-file-outline (filename working-dir)
+  "gather outline of specified rspec file"
+  (let
+      ((command-output (shell-command-to-string
+                        (format "cd %s; %s"
+                                (shell-quote-argument working-dir) command))))
+    ))
 
 (defun find-related-file ()
   "find related file"
