@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby --disable=gems
+#!/usr/bin/env ruby
 
 class SearchRelated
   attr_accessor :root_directory, :current_file, :partial_filename
