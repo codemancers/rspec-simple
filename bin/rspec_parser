@@ -1,0 +1,123 @@
+#!/usr/bin/env ruby
+
+require "ripper"
+
+class RspecToken
+  attr_accessor :line_number, :name, :content
+  attr_accessor :children, :sexp, :sexp_name
+
+  def initialize(p_sexp)
+    @sexp = p_sexp
+    @sexp_name = sexp[0]
+    @command_sexp = sexp[1]
+    @children_sexp = sexp[2]
+    @children = []
+  end
+
+  def parse
+    parse_command_sexp
+    parse_content_sexp
+    parse_children_sexp
+  end
+
+  def parse_command_sexp
+    return unless @command_sexp
+    @command_name = @command_sexp[0]
+    sexp_meta_data = @command_sexp[1]
+    return unless sexp_meta_data
+    @sexp_type = sexp_meta_data[0]
+    if @sexp_type == :@ident
+      @name = sexp_meta_data[1]
+      if sexp_meta_data[2] && sexp_meta_data[2][0]
+        @line_number = sexp_meta_data[2][0]
+      end
+    elsif @sexp_type == :fcall
+      inner_sexp = sexp_meta_data[1]
+      @name = inner_sexp[1]
+      if inner_sexp[2] && inner_sexp[2][0]
+        @line_number = inner_sexp[2][0]
+      end
+    end
+  end
+
+  def parse_content_sexp
+    if @command_sexp && @command_sexp.is_a?(Array) && @command_sexp.fetch(2, nil)
+      content_sexp =
+        if @command_sexp[2] && @command_sexp[2][1] && @command_sexp[2][1].is_a?(Array)
+          @command_sexp[2][1].flatten
+        end
+      return unless content_sexp
+      extract_content(content_sexp)
+    end
+  end
+
+  def extract_content(content_sexp)
+    if content_string_literal?(content_sexp)
+      @content = content_sexp[3]
+    elsif content_sexp[0] == :args_add_block
+      @content = content_sexp[4]
+    elsif content_sexp[0] == :var_ref
+      @content = content_sexp[2]
+    end
+  end
+
+  def content_string_literal?(content_sexp_detailed)
+    return false unless content_sexp_detailed
+    content_sexp_detailed[0] == :string_literal
+  end
+
+  def parse_children_sexp
+    if !@children_sexp || !@children_sexp.is_a?(Array)
+      return
+    end
+    child_sexp_name = @children_sexp[0]
+    if child_sexp_name.is_a?(Symbol)
+      child_sexp_instance = RspecToken.new(@children_sexp)
+      child_sexp_instance.parse
+      @children << child_sexp_instance
+    else
+      @children_sexp.each do |child_sexp|
+        child_sexp_instance = RspecToken.new(child_sexp)
+        child_sexp_instance.parse
+        @children << child_sexp_instance
+      end
+    end
+  end
+end
+
+
+class RspecParser
+  attr_accessor :rspec_tokens
+  def initialize(filename)
+    @rspec_tokens = []
+    indent_label = 0
+    file_content = File.read(filename)
+    x = Ripper.sexp(file_content)
+    program_sexps = x.slice(1)
+    program_sexps.each do |program_sexp|
+      token = RspecToken.new(program_sexp)
+      token.parse
+      self.rspec_tokens << token
+    end
+    rspec_tokens.each do |rspec_token|
+      print_rspec_token(rspec_token, indent_label)
+    end
+  end
+
+  def print_rspec_token(rspec_token, indent_label)
+    if valid_rspec_token?(rspec_token.name)
+      puts " "*indent_label + "#{rspec_token.name}" + " " + "\"#{rspec_token.content}\"" + "::" + rspec_token.line_number.to_s
+      indent_label += 2
+    end
+    rspec_token.children.each do |child_rspec_token|
+      print_rspec_token(child_rspec_token, indent_label)
+    end
+  end
+
+  def valid_rspec_token?(token_name)
+    return false if !token_name || token_name.empty?
+    ['context', 'it', 'describe'].include?(token_name)
+  end
+end
+
+RspecParser.new(ARGV.first)

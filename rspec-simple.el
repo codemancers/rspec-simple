@@ -53,7 +53,6 @@ of FILE in the current directory, suitable for creation"
                    (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
                    ) t))
 
-;;; Code:
 (defun rspec-simple-shell-command (command file-separator working-dir)
   "Executes 'command' and returns the list of printed files in
    the form '((short/file/name . full/path/to/file) ...). The
@@ -67,13 +66,17 @@ of FILE in the current directory, suitable for creation"
                 (cons file (expand-file-name file working-dir)))
               files))))
 
-(defun rspec-file-outline (filename working-dir)
+(defun rspec-file-outline (rspec-parse-command rspec-file-name)
   "gather outline of specified rspec file"
   (let
       ((command-output (shell-command-to-string
-                        (format "cd %s; %s"
-                                (shell-quote-argument working-dir) command))))
+                        (format "%s %s"
+                                rspec-parse-command rspec-file-name))))
     ))
+
+;; return rspec-parse-file
+(defun rspec-parse-command-path ()
+  (concat (rspec-simple-source-dir) "bin/rspec_parser"))
 
 (defun find-related-file ()
   "find related file"
