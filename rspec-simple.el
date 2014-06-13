@@ -72,6 +72,7 @@ of FILE in the current directory, suitable for creation"
       ((command-output (shell-command-to-string
                         (format "%s %s"
                                 rspec-parse-command rspec-file-name))))
+    (let ((rspec-lines (s-split "\n" command-output))))
     ))
 
 ;; return rspec-parse-file
