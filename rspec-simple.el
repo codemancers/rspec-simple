@@ -1,5 +1,34 @@
+;;; -*- lexical-binding: t -*-
+
 (require 'cl)
 (require 'compile)
+(require  's )
+
+(defface rspec-button-face
+  '((((class color)) (:foreground "blue" :bold t))
+    (t (:reverse-video t)))
+  "Face to use for highlighting links in rspec files."
+  :group 'faces
+  :group 'button)
+
+(define-button-type 'rspec-ref-button
+  'help-echo "Push to create an empty reference definition"
+  'face 'rspec-button-face)
+
+(defvar rspec-outline-mode-hook nil)
+
+(defvar *rspec-outline-mode-map*
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map t)
+    (define-key map "q" 'kill-this-buffer)
+    map))
+
+(define-derived-mode rspec-outline-mode fundamental-mode "rspec-outline mode"
+  "A mode for viewing rspec outline"
+  (interactive)
+  (use-local-map *rspec-outline-mode-map*)
+  (run-hooks 'rspec-outline-mode-hook))
+
 
 (defun* get-closest-gemfile-root (&optional (file "Gemfile"))
   "Determine the pathname of the first instance of FILE starting from the current directory towards root.
@@ -13,20 +42,24 @@ of FILE in the current directory, suitable for creation"
      if (equal d root)
      return nil)))
 
+(defvar rspec-simple-source-dir        nil "Private variable.")
+
 (defun rspec-compile-file ()
   (interactive)
-  (compile (format "cd %s;bundle exec rspec %s"
+  (compile (format "cd %s;bundle exec rspec --format d %s"
                    (get-closest-gemfile-root)
                    (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
                    ) t))
 
 (defun rspec-compile-on-line ()
   (interactive)
-  (compile (format "cd %s;bundle exec rspec %s -l %s"
-                   (get-closest-gemfile-root)
-                   (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
-                   (line-number-at-pos)
-                   ) t))
+  (progn
+    (window-configuration-to-register 9)
+    (compile (format "cd %s;bundle exec rspec %s -l %s"
+                     (get-closest-gemfile-root)
+                     (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
+                     (line-number-at-pos)
+                     ) t)))
 
 (defun zeus-rspec-compile-file ()
   (interactive)
@@ -35,7 +68,6 @@ of FILE in the current directory, suitable for creation"
                    (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
                    ) t))
 
-;;; Code:
 (defun rspec-simple-shell-command (command file-separator working-dir)
   "Executes 'command' and returns the list of printed files in
    the form '((short/file/name . full/path/to/file) ...). The
@@ -49,16 +81,57 @@ of FILE in the current directory, suitable for creation"
                 (cons file (expand-file-name file working-dir)))
               files))))
 
+(defun rspec-file-outline (rspec-parse-command rspec-file-name)
+  "gather outline of specified rspec file"
+  (let
+      ((command-output (shell-command-to-string
+                        (format "%s %s"
+                                rspec-parse-command rspec-file-name))))
+    (s-split "\n" command-output)))
+
+(defun display-rspec-file-outline ()
+  "make rpec outline"
+  (interactive)
+  (let (
+        (rspec-outline-buffer (get-buffer-create (generate-new-buffer-name "*rspec-outline*")))
+        (old-rspec-buffer (current-buffer))
+        )
+    (setq outline-list (rspec-file-outline (rspec-parse-command-path) (buffer-file-name)))
+    (switch-to-buffer-other-window rspec-outline-buffer)
+    (dolist (line  outline-list)
+      (let ((line-list (s-split "::" line)))
+
+        (insert-text-button
+         (concat (first line-list) "\n") :type 'rspec-ref-button
+         'follow-link t 'action (lambda (button)
+                                  (progn
+                                    (goto-line (string-to-number (second line-list)) old-rspec-buffer))))))
+    (rspec-outline-mode)
+    ))
+
+;; return rspec-parse-file
+(defun rspec-parse-command-path ()
+  (concat (rspec-simple-source-dir) "bin/rspec_parser"))
+
 (defun find-related-file ()
   "find related file"
   (interactive)
   (let* (
          (current-file-name (buffer-file-name))
          (app-root (get-closest-gemfile-root))
-         (file-list (rspec-simple-shell-command (concat "search_related " current-file-name) "\n" app-root))
+         (file-list (rspec-simple-shell-command
+                     (concat
+                      (concat (rspec-simple-source-dir) "bin/search_related ")
+                      current-file-name) "\n" app-root)
+                    )
          )
     (rspec-simple-ido-find-file file-list)
     ))
+
+(defun rspec-simple-source-dir ()
+  (or rspec-simple-source-dir
+      (setq rspec-simple-source-dir (file-name-directory (find-lisp-object-file-name
+                                                          'rspec-simple-source-dir (symbol-function 'rspec-simple-source-dir))))))
 
 (defun rspec-simple-ido-find-file (file-list)
   "Actually find file to open, using ido."
@@ -82,6 +155,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
+            (local-set-key (kbd "s-t") 'find-related-file)
             ))
 
 (add-hook 'ruby-mode-hook
@@ -89,6 +163,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
+            (local-set-key (kbd "s-t") 'find-related-file)
             ))
 
 (provide 'rspec-simple)
