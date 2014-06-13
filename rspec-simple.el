@@ -15,6 +15,20 @@
   'help-echo "Push to create an empty reference definition"
   'face 'rspec-button-face)
 
+(defvar rspec-outline-mode-hook nil)
+
+(defvar *rspec-outline-mode-map*
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map t)
+    (define-key map "q" 'kill-this-buffer)
+    map))
+
+(define-derived-mode rspec-outline-mode fundamental-mode "rspec-outline mode"
+  "A mode for viewing rspec outline"
+  (interactive)
+  (use-local-map *rspec-outline-mode-map*)
+  (run-hooks 'rspec-outline-mode-hook))
+
 
 (defun* get-closest-gemfile-root (&optional (file "Gemfile"))
   "Determine the pathname of the first instance of FILE starting from the current directory towards root.
@@ -91,7 +105,9 @@ of FILE in the current directory, suitable for creation"
                                                       (progn
                                                         (goto-line (string-to-number (second line-list)) old-buffer)))
         ))
-      )))
+      )
+    (rspec-outline-mode)
+    ))
 
 ;; return rspec-parse-file
 (defun rspec-parse-command-path ()
