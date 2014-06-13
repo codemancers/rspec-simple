@@ -1,5 +1,8 @@
+;;; -*- lexical-binding: t -*-
+
 (require 'cl)
 (require 'compile)
+(require  's )
 
 (defface rspec-button-face
   '((((class color)) (:foreground "blue" :bold t))
@@ -10,9 +13,7 @@
 
 (define-button-type 'rspec-ref-button
   'help-echo "Push to create an empty reference definition"
-  'face 'rspec-button-face
-  'action (lambda (b)
-            (call-interactively 'find-file)))
+  'face 'rspec-button-face)
 
 
 (defun* get-closest-gemfile-root (&optional (file "Gemfile"))
@@ -72,17 +73,25 @@ of FILE in the current directory, suitable for creation"
       ((command-output (shell-command-to-string
                         (format "%s %s"
                                 rspec-parse-command rspec-file-name))))
-    (let ((rspec-lines (s-split "\n" command-output))))
-    ))
+    (s-split "\n" command-output)))
 
 (defun display-rspec-file-outline ()
-  (let ((outline-list (rspec-file-outline (rspec-parse-command-path) (current-file-name))))
-    (loop for line in outline-list
-          (let ((line-list (s-split "::" outline-list)))
+  "make rpec outline"
+  (interactive)
+  (let (
+         (rspec-outline-buffer (get-buffer-create "*rspec-outline*")))
+    (setq outline-list (rspec-file-outline (rspec-parse-command-path) (buffer-file-name)))
+    (setq old-buffer (current-buffer))
+    (switch-to-buffer-other-window rspec-outline-buffer)
+    (dolist (line  outline-list)
+      (let ((line-list (s-split "::" line)))
 
-            )
-          )
-    ))
+        (insert-text-button (concat (first line-list) "\n") :type 'rspec-ref-button
+                            'follow-link t 'action (lambda (button)
+                                                      (progn
+                                                        (goto-line (string-to-number (second line-list)) old-buffer)))
+        ))
+      )))
 
 ;; return rspec-parse-file
 (defun rspec-parse-command-path ()
