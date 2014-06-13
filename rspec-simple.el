@@ -93,19 +93,19 @@ of FILE in the current directory, suitable for creation"
   "make rpec outline"
   (interactive)
   (let (
-         (rspec-outline-buffer (get-buffer-create "*rspec-outline*")))
+        (rspec-outline-buffer (get-buffer-create (generate-new-buffer-name "*rspec-outline*")))
+        (old-rspec-buffer (current-buffer))
+        )
     (setq outline-list (rspec-file-outline (rspec-parse-command-path) (buffer-file-name)))
-    (setq old-buffer (current-buffer))
     (switch-to-buffer-other-window rspec-outline-buffer)
     (dolist (line  outline-list)
       (let ((line-list (s-split "::" line)))
 
-        (insert-text-button (concat (first line-list) "\n") :type 'rspec-ref-button
-                            'follow-link t 'action (lambda (button)
-                                                      (progn
-                                                        (goto-line (string-to-number (second line-list)) old-buffer)))
-        ))
-      )
+        (insert-text-button
+         (concat (first line-list) "\n") :type 'rspec-ref-button
+         'follow-link t 'action (lambda (button)
+                                  (progn
+                                    (goto-line (string-to-number (second line-list)) old-rspec-buffer))))))
     (rspec-outline-mode)
     ))
 
