@@ -75,6 +75,15 @@ of FILE in the current directory, suitable for creation"
     (let ((rspec-lines (s-split "\n" command-output))))
     ))
 
+(defun display-rspec-file-outline ()
+  (let ((outline-list (rspec-file-outline (rspec-parse-command-path) (current-file-name))))
+    (loop for line in outline-list
+          (let ((line-list (s-split "::" outline-list)))
+
+            )
+          )
+    ))
+
 ;; return rspec-parse-file
 (defun rspec-parse-command-path ()
   (concat (rspec-simple-source-dir) "bin/rspec_parser"))
