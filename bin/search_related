@@ -43,13 +43,11 @@ class SearchRelated
   end
 
   def find_opposite_file
-    directory = File.dirname(current_file)
     if current_file =~ /_spec/
-      x = directory.gsub(/spec/, 'lib')
+      "lib/"
     else
-      x = directory.gsub(/lib/, 'spec')
+      "spec/"
     end
-    x
   end
 
   private

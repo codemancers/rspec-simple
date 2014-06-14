@@ -5,7 +5,7 @@
 (require  's )
 
 (defface rspec-button-face
-  '((((class color)) (:foreground "blue" :bold t))
+  '((((class color)) (:foreground "DeepSkyBlue"))
     (t (:reverse-video t)))
   "Face to use for highlighting links in rspec files."
   :group 'faces
