@@ -89,7 +89,7 @@ of FILE in the current directory, suitable for creation"
                                 rspec-parse-command rspec-file-name))))
     (s-split "\n" command-output)))
 
-(defun display-rspec-file-outline ()
+(defun rspec-display-file-outline ()
   "make rpec outline"
   (interactive)
   (let (
@@ -113,7 +113,7 @@ of FILE in the current directory, suitable for creation"
 (defun rspec-parse-command-path ()
   (concat (rspec-simple-source-dir) "bin/rspec_parser"))
 
-(defun find-related-file ()
+(defun rspec-find-related-file ()
   "find related file"
   (interactive)
   (let* (
@@ -155,7 +155,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
-            (local-set-key (kbd "s-t") 'find-related-file)
+            (local-set-key (kbd "s-t") 'rspec-find-related-file)
             ))
 
 (add-hook 'ruby-mode-hook
@@ -163,7 +163,7 @@ of FILE in the current directory, suitable for creation"
             (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
             (local-set-key (kbd "C-c k") 'rspec-compile-file)
             (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
-            (local-set-key (kbd "s-t") 'find-related-file)
+            (local-set-key (kbd "s-t") 'rspec-find-related-file)
             ))
 
 (provide 'rspec-simple)
