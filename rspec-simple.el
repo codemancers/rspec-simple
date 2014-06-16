@@ -150,20 +150,5 @@ of FILE in the current directory, suitable for creation"
           ))))
 
 
-(add-hook 'enh-ruby-mode-hook
-          (lambda ()
-            (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
-            (local-set-key (kbd "C-c k") 'rspec-compile-file)
-            (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
-            (local-set-key (kbd "s-t") 'rspec-find-related-file)
-            ))
-
-(add-hook 'ruby-mode-hook
-          (lambda ()
-            (local-set-key (kbd "C-c l") 'rspec-compile-on-line)
-            (local-set-key (kbd "C-c k") 'rspec-compile-file)
-            (local-set-key (kbd "C-c s") 'zeus-rspec-compile-file)
-            (local-set-key (kbd "s-t") 'rspec-find-related-file)
-            ))
 
 (provide 'rspec-simple)
