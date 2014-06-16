@@ -21,7 +21,7 @@ rspec-find-related-file
 rspec-display-file-outline
 ```
 
-After that you can define following shortcut in your `ruby-mode-hook`:
+You can define following shortcut in your `ruby-mode-hook`:
 
     (add-hook 'ruby-mode-hook
          (lambda ()
