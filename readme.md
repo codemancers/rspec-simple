@@ -47,4 +47,10 @@ If your shell is not being picked correctly you can as well try:
     
 ## Example    
 
+### Running specs
+
 ![Rspec simple](https://github.com/code-mancers/rspec-simple/raw/master/images/rspec-simple.gif "rspec simple")
+
+### Rspec outline
+
+![Rspec outline](https://github.com/code-mancers/rspec-simple/raw/master/images/outline.gif "rspec outline)
