@@ -14,7 +14,8 @@ rspec-compile-on-line
 rspec-compile-file
 ;; find related file for this spec file. This could be 
 ;; a spec file or corresponding code file.
-;; Works with Rails model/controllers too.
+;; Works with Rails model/controllers too. Unlike toggle.el
+;; this integrates well with ido
 rspec-find-related-file
 ;; Display outline of rspec file without running specs.
 ;; You can navigate too from the outline.
