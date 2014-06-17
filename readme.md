@@ -53,4 +53,4 @@ If your shell is not being picked correctly you can as well try:
 
 ### Rspec outline
 
-![Rspec outline](https://github.com/code-mancers/rspec-simple/raw/master/images/outline.gif "rspec outline)
+![Rspec outline](https://github.com/code-mancers/rspec-simple/raw/master/images/outline.gif "rspec outline")
