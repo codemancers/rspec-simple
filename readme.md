@@ -5,22 +5,17 @@ Just require the file in your configuration:
     (add-to-list 'load-path "<path_to_rspec_simple>")
     (require 'rspec-simple)
     
+
+
+
+### Available commands
 `rspec-simple` provides following interactive functions that you can use:
 
-```
-;; run spec where the cursor is
-rspec-compile-on-line 
-;; Run entire file
-rspec-compile-file
-;; find related file for this spec file. This could be 
-;; a spec file or corresponding code file.
-;; Works with Rails model/controllers too. Unlike toggle.el
-;; this integrates well with ido
-rspec-find-related-file
-;; Display outline of rspec file without running specs.
-;; You can navigate too from the outline.
-rspec-display-file-outline
-```
+* `rspec-compile-on-line ` - Run spec where the cursor is.
+* `rspec-compile-file` - Run entire spec file.
+* `rspec-find-related-file` - Toggle between spec and code. Implementation very different from `toggle.el`. Integrates with `ido-mode` and does depth first search of related file (In other words, much smarter than `toggle.el`)
+* `rspec-display-file-outline` - Display rspec outline (bit like dry run). The generated outline is navigatable via mouse or keyboard! Implemented using ripper.
+
 
 You can define following shortcut in your `ruby-mode-hook`:
 
