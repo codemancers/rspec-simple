@@ -55,7 +55,7 @@ of FILE in the current directory, suitable for creation"
   (interactive)
   (progn
     (window-configuration-to-register 9)
-    (compile (format "cd %s;bundle exec rspec %s -l %s"
+    (compile (format "cd %s;bundle exec rspec %s:%s"
                      (get-closest-gemfile-root)
                      (file-relative-name (buffer-file-name) (get-closest-gemfile-root))
                      (line-number-at-pos)
